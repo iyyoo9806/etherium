@@ -1,3 +1,5 @@
+//cancel, destruct 부분은 못하였음
+
 // var web3 = new Web3();
 var web3 = new Web3('ws://localhost:7545');
  
@@ -322,26 +324,31 @@ var auctionContract =  new web3.eth.Contract(
   );
 
 
-var contractAddress = '0x230c28aD6AE004CF77f4bBFef6380b1Ac3E19f38';
+var contractAddress = '0x5528FA4BE0Ff84Ed0Eb0A9dc191A471ffAbdF6a1';
 // var auction = auctionContract.at(contractAddress); 
-auctionContract.options.address = '0x230c28aD6AE004CF77f4bBFef6380b1Ac3E19f38';
+auctionContract.options.address = '0x5528FA4BE0Ff84Ed0Eb0A9dc191A471ffAbdF6a1';
 
 function bid() {
   var myBid = document.getElementById('value').value;
   var myBidWei = web3.utils.toWei(myBid, "ether");
   var currentMyBid;
+  
   auctionContract.methods.bids(bidder).call().then( (result) => {
     var bidEther = web3.utils.toBN(result);
     currentMyBid = bidEther;
-});
-
+  });
 
   // 현재 입찰가와 최고 입찰가를 가져오기
   auctionContract.methods.highestBid().call().then(function (result) {
     var currentHighestBidWei = web3.utils.toBN(result);
     console.log(currentHighestBidWei);
+
+    // 문자열을 숫자로 변환
+    var myBidWeiBN = web3.utils.toBN(myBidWei);
+
     // 현재 입찰가와 비교
-    if (myBidWei + currentMyBid <= currentHighestBidWei) {
+    if (myBidWeiBN.add(currentMyBid).lte(currentHighestBidWei)) {
+      //더한것이(add) 작거나 같다면(lte)
       alert("현재 입찰가가 최고 입찰가보다 작거나 같습니다.");
     } else {
       // 입찰가가 최고 입찰가보다 큰 경우 입찰 진행
@@ -353,20 +360,18 @@ function bid() {
         console.log(result);
 
         // 최고 입찰자 및 입찰가 갱신
-        currentHighestBid = (myBidWei + currentMyBid);
+        // 최고 입찰가는 비드의 누적으로 되게 만듬
+        currentHighestBid = myBidWeiBN.add(currentMyBid);
         currentHighestBidder = bidder;
         document.getElementById("HighestBidder").innerHTML = currentHighestBidder;
-        document.getElementById("HighestBid").innerHTML = web3.utils.fromWei(currentHighestBid, 'ether');
+        document.getElementById("HighestBid").innerHTML = web3.utils.fromWei(currentHighestBid.toString(), 'ether');
         document.getElementById("biding_status").innerHTML = "Successfull bid, transaction ID : " + result.transactionHash;
 
         auctionContract.methods.bids(bidder).call().then( (result) => {
-  
           var bidEther = web3.utils.fromWei(web3.utils.toBN(result), 'ether');
-          document.getElementById("MyBid").innerHTML=bidEther;
-      
+          document.getElementById("MyBid").innerHTML = bidEther;
           console.log(bidder);
-       
-      }); 
+        }); 
       });
     }
   });

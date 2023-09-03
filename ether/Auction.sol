@@ -68,7 +68,7 @@ contract MyAuction is Auction{
  
   
 function cancel_auction() external only_owner  an_ongoing_auction returns (bool){
-    
+        //취소
         STATE=auction_state.CANCELLED;
         emit CanceledEvent("Auction Cancelled", now);
         return true;
@@ -77,7 +77,7 @@ function cancel_auction() external only_owner  an_ongoing_auction returns (bool)
     
     
 function destruct_auction() external only_owner returns (bool){
-        
+        //종료
     require(now > auction_end,"You can't destruct the contract,The auction is still open");
     for(uint i=0;i<bidders.length;i++)
     {
@@ -91,6 +91,7 @@ function destruct_auction() external only_owner returns (bool){
 
     
 function withdraw() public returns (bool){
+        //철회
         require(now > auction_end ,"You can't withdraw, the auction is still open");
         uint amount;
 
@@ -99,7 +100,6 @@ function withdraw() public returns (bool){
         msg.sender.transfer(amount);
         emit WithdrawalEvent(msg.sender, amount);
         return true;
-      
     }
     
 function get_owner() public view returns(address){
